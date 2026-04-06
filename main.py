@@ -7,6 +7,7 @@ from terminaltables import AsciiTable
 AREA_HH = 1
 TOWN_SJ = 4
 PERIOD = None
+
 PROGRAMMING_LANGUAGES = [
     'Python',
     'Java',
