@@ -180,7 +180,7 @@ def fetch_vacancies_hh(
                 0 — за всё время.
                 1 — за последние 24 часа.
                 3 — за последние 3 дня.
-                30 — за за последний месяц (Для hh.ru это максимум).
+                30 — за последний месяц (Для hh.ru это максимум).
         Если None, фильтрация по периоду не применяется.
         per_page (int): количество вакансий на страницу (1..100).
         По умолчанию 100.
@@ -235,7 +235,7 @@ def fetch_vacancies_hh(
 
 
 def calculate_stats(vacancies, total_found, salary_predictor):
-    """Собирает статистику для каждойвакансии.
+    """Собирает статистику для каждой вакансии.
 
     Args:
         vacancies (list): список вакансий (словарей).
@@ -271,7 +271,13 @@ def print_table(platform_name, lang_stats, town_name=None, period=None):
     """Выводит информацию.
 
     Печатает сводную таблицу для одной платформы.
-    lang_stats может содержать данные по нескольким языкам.
+
+    Args:
+        platform_name (str): название платформы ('SuperJob' или 'HeadHunter')
+        lang_stats (dict): словарь { язык: статистика } (
+        результат calculate_stats)
+        town_name (str | None): название города (опционально)
+        period (int | None): период в днях (опционально)
     """
     if town_name:
         title = f"{platform_name} {town_name}"
@@ -313,6 +319,7 @@ def main():
     stats_hh = {}
     sj_town = None
     hh_town = None
+
     for lang in PROGRAMMING_LANGUAGES:
 
         vacancies_sj, total_sj, town_sj = fetch_vacancies_sj(
@@ -327,6 +334,7 @@ def main():
             vacancies_hh, total_hh, predict_rub_salary_hh)
         if hh_town is None and town_hh is not None:
             hh_town = town_hh
+
     print_table('SuperJob', stats_sj, sj_town, PERIOD)
     print_table('HeadHunter', stats_hh, hh_town, PERIOD)
 
