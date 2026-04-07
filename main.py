@@ -319,7 +319,7 @@ def main():
     stats_hh = {}
     sj_town = None
     hh_town = None
-
+    print("Собираем статистику, подождите пару минут...")
     for lang in langs:
 
         vacancies_sj, total_sj, town_sj = fetch_vacancies_sj(
