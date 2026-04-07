@@ -123,7 +123,7 @@ def fetch_vacancies_sj(
             response.raise_for_status()
             response_api = response.json()
         except requests.exceptions.RequestException as e:
-            print(f"Ошибка SuperJob для {keyword} (стр. {page+1}): {e}")
+            print(f'Ошибка SuperJob для {keyword} (стр. {page+1}): {e}')
             break
 
         vacancies = response_api.get('objects', [])
@@ -199,7 +199,7 @@ def fetch_vacancies_hh(
             response.raise_for_status()
             response_api = response.json()
         except requests.exceptions.RequestException as e:
-            print(f"Ошибка HeadHunter для {text} (стр. {page+1}): {e}")
+            print(f'Ошибка HeadHunter для {text} (стр. {page+1}): {e}')
             break
 
         vacancies = response_api.get('items', [])
@@ -264,12 +264,12 @@ def print_table(platform_name, lang_stats, town_name=None, period=None):
         period (int | None): период в днях (опционально)
     """
     if town_name:
-        title = f"{platform_name} {town_name}"
+        title = f'{platform_name} {town_name}'
     else:
         title = platform_name
 
     if period is not None:
-        title += f" период {period} д."
+        title += f' период {period} д.'
 
     table_data = [['Язык', 'Всего вакансий', 'Обработано', 'Средняя зарплата']]
 
@@ -300,7 +300,7 @@ def main():
     try:
         period = int(period_raw) if period_raw else None
     except ValueError:
-        print(f"Ошибка: PERIOD='{period_raw}' — не число")
+        print(f'Ошибка: PERIOD='{period_raw}' — не число')
     period = None
 
     langs_str = os.getenv('PROGRAMMING_LANGUAGES', '')
@@ -312,14 +312,14 @@ def main():
 
     sj_key = os.getenv('SJ_KEY')
     if not sj_key:
-        print("Ошибка: не найден SJ_KEY в переменных окружения")
+        print('Ошибка: не найден SJ_KEY в переменных окружения')
         return
 
     stats_sj = {}
     stats_hh = {}
     sj_town = None
     hh_town = None
-    print("Собираем статистику, подождите пару минут...")
+    print('Собираем статистику, подождите пару минут...')
     for lang in langs:
 
         vacancies_sj, total_sj, town_sj = fetch_vacancies_sj(
@@ -353,5 +353,5 @@ def main():
     print_table('HeadHunter', stats_hh, hh_town, period)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
