@@ -300,7 +300,7 @@ def main():
     try:
         period = int(period_raw) if period_raw else None
     except ValueError:
-        print(f'Ошибка: PERIOD='{period_raw}' — не число')
+        print(f"Ошибка: PERIOD='{period_raw}' — не число")
     period = None
 
     langs_str = os.getenv('PROGRAMMING_LANGUAGES', '')
