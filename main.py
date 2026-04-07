@@ -1,9 +1,8 @@
-from terminaltables import AsciiTable 
+from terminaltables import AsciiTable
 from dotenv import load_dotenv
-import requests
-import time
 import os
-
+import time
+import requests
 
 
 def predict_salary(salary_from, salary_to):
@@ -70,9 +69,8 @@ def fetch_vacancies_sj(
     api_key,
     per_page=100,
 ):
-    """
-    Загружает все доступные вакансии SuperJob по ключевому слову и городу.
-    
+    """Загружает все доступные вакансии SuperJob по ключевому слову и городу.
+
     no_agreement параметр отвечающий за показ вакансий с пустыми полями
     зарплаты.
 
@@ -88,19 +86,23 @@ def fetch_vacancies_sj(
         Если None, фильтрация по периоду не применяется.
         api_key (str): секретный ключ API SuperJob.
         per_page (int): количество вакансий на страницу (1..100).
-        По умолчанию 100.   
-    
+        По умолчанию 100.
+
     Returns:
         tuple[list, int, str | None]:
         (список вакансий, общее количество найденных, название города).
     """
     url = 'https://api.superjob.ru/2.0/vacancies/'
-    headers = {'X-Api-App-Id': api_key, 'User-Agent': 'Mozilla/5.0'}
+    headers = {
+        'X-Api-App-Id': api_key,
+        'User-Agent': 'Mozilla/5.0'
+    }
     no_agreement = 1
     all_vacancies = []
     total_found = 0
     town_name = None
     page = 0
+    
     while True:
         params = {
             'page': page,
@@ -123,14 +125,14 @@ def fetch_vacancies_sj(
         except requests.exceptions.RequestException as e:
             print(f"Ошибка SuperJob для {keyword} (стр. {page+1}): {e}")
             break
-        
+
         vacancies = response_api.get('objects', [])
         if not vacancies:
             break
-        
+
         if town_name is None and vacancies:
             town_name = vacancies[0].get('town', {}).get('title')
-        
+
         all_vacancies.extend(vacancies)
         total_found = response_api.get('total', len(all_vacancies))
         time.sleep(1)
@@ -147,7 +149,6 @@ def fetch_vacancies_hh(
     per_page=100,
 ):
     """Загружает доступные вакансии Head Hunter по ключевому слову и городу.
-
 
     only_with_salary параметр отвечающий за показ вакансий с пустыми полями
     зарплаты.
@@ -166,8 +167,8 @@ def fetch_vacancies_hh(
         По умолчанию 100.
 
     Returns:
-            tuple[list, int, str | None]:
-            (список вакансий, общее количество найденных, название города).
+        tuple[list, int, str | None]:
+        (список вакансий, общее количество найденных, название города).
     """
     url = 'https://api.hh.ru/vacancies'
     headers = {'User-Agent': 'Mozilla/5.0'}
@@ -200,21 +201,21 @@ def fetch_vacancies_hh(
         except requests.exceptions.RequestException as e:
             print(f"Ошибка HeadHunter для {text} (стр. {page+1}): {e}")
             break
-        
+
         vacancies = response_api.get('items', [])
         if not vacancies:
             break
-        
+
         if town_name is None and vacancies:
-            town_name = vacancies[0].get('area', {}).get('name')        
-        
+            town_name = vacancies[0].get('area', {}).get('name')
+
         all_vacancies.extend(vacancies)
         total_found = response_api.get('found', len(all_vacancies))
         time.sleep(1)
         if page >= response_api.get('pages', 1) - 1:
             break
-        page += 1   
-            
+        page += 1
+
     return all_vacancies, total_found, town_name
 
 
@@ -228,13 +229,12 @@ def calculate_stats(vacancies, total_found, salary_predictor):
         принимающая вакансию и возвращающая зарплату в рублях или None.
 
     Returns:
-            dict: {
-                'vacancies_found': int, общее количество вакансий.
-                'vacancies_processed': int, кол-во вакансий,
-                 участвующих в статистике.
-                'average_salary': int | None усреднённая зарплата.
-            }
-
+        dict: {
+            'vacancies_found': int, общее количество вакансий.
+            'vacancies_processed': int, кол-во вакансий,
+             участвующих в статистике.
+            'average_salary': int | None усреднённая зарплата.
+        }
     """
     processed = 0
     total_salary = 0
@@ -293,23 +293,23 @@ def main():
     Поиск вакансий на сайте superjob.ru и hh.ru.
     """
     load_dotenv()
-    area_hh_id = int(os.getenv('AREA_HH','1'))
-    town_sj_id = int(os.getenv('TOWN_SJ','4'))
-    
+    area_hh_id = int(os.getenv('AREA_HH', '1'))
+    town_sj_id = int(os.getenv('TOWN_SJ', '4'))
+
     period_raw = os.getenv('PERIOD')
     try:
         period = int(period_raw) if period_raw else None
     except ValueError:
         print(f"Ошибка: PERIOD='{period_raw}' — не число")
     period = None
-    
+
     langs_str = os.getenv('PROGRAMMING_LANGUAGES', '')
     langs = [
         lang.strip()
         for lang in langs_str.split(',')
         if lang.strip()
     ]
-        
+
     sj_key = os.getenv('SJ_KEY')
     if not sj_key:
         print("Ошибка: не найден SJ_KEY в переменных окружения")
@@ -335,7 +335,7 @@ def main():
         )
         if sj_town is None and town_sj is not None:
             sj_town = town_sj
-        
+
         vacancies_hh, total_hh, town_hh = fetch_vacancies_hh(
             lang,
             area_hh_id,
