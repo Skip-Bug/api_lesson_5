@@ -58,7 +58,7 @@ API-ключ необходим для работы с API SuperJob.
 ```
 Запускаем:
 ```bash
-main.py
+python main.py
 ```
 <img width="400" height="300" alt="Screenshot 2026-04-07 221237" src="https://github.com/user-attachments/assets/8ab5b8c8-f2cf-4b69-9710-35a424017206" />
 
