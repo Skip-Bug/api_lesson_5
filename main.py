@@ -1,3 +1,4 @@
+"""Парсер вакансий."""
 from terminaltables import AsciiTable
 from dotenv import load_dotenv
 import os
