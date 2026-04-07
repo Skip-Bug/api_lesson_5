@@ -30,7 +30,7 @@ def predict_rub_salary_hh(vacancy):
         vacancy (dict): словарь с данными одной вакансии от API Head Hunter.
 
     Returns:
-        int | None: предсказанная зарплата в рублях или None,
+        int | None: усредненная зарплата в рублях или None,
         если зарплата не указана.
     """
     salary = vacancy.get('salary')
@@ -45,14 +45,14 @@ def predict_rub_salary_sj(vacancy):
     """Собирает информацию по зарплатам из вакансий.
 
     Принимает объект вакансии SuperJob,
-    возвращает предсказанную зарплату в рублях,
-    если зарплата указана иначе None.
+    возвращает усредненную зарплату в рублях,
+    если зарплата указана, иначе None.
 
     Args:
         vacancy (dict): словарь с данными одной вакансии от API SuperJob.
 
     Returns:
-        int | None: предсказанная зарплата в рублях или None,
+        int | None: усреденная зарплата в рублях или None,
         если зарплата не указана.
     """
     salary_from = vacancy.get('payment_from')
@@ -72,7 +72,6 @@ def fetch_vacancies_sj(
 ):
     """
     Загружает все доступные вакансии SuperJob по ключевому слову и городу.
-
     
     no_agreement параметр отвечающий за показ вакансий с пустыми полями
     зарплаты.
@@ -191,7 +190,11 @@ def fetch_vacancies_hh(
 
         try:
             response = requests.get(
-                url, params=params, headers=headers, timeout=10)
+                url,
+                params=params,
+                headers=headers,
+                timeout=10
+            )
             response.raise_for_status()
             response_api = response.json()
         except requests.exceptions.RequestException as e:
@@ -256,8 +259,8 @@ def print_table(platform_name, lang_stats, town_name=None, period=None):
     Args:
         platform_name (str): название платформы ('SuperJob' или 'HeadHunter')
         lang_stats (dict): словарь { язык: статистика } (
-        результат calculate_stats)
-        town_name (str | None): название города (опционально)
+        результат calculate_stats).
+        town_name (str): название города.
         period (int | None): период в днях (опционально)
     """
     if town_name:
@@ -288,18 +291,18 @@ def main():
     """Парсит по superjob.ru и hh.ru.
 
     Поиск вакансий на сайте superjob.ru и hh.ru.
-
     """
-    
     load_dotenv()
     area_hh_id = int(os.getenv('AREA_HH','1'))
     town_sj_id = int(os.getenv('TOWN_SJ','4'))
+    
     period_raw = os.getenv('PERIOD')
     try:
         period = int(period_raw) if period_raw else None
     except ValueError:
         print(f"Ошибка: PERIOD='{period_raw}' — не число")
     period = None
+    
     langs_str = os.getenv('PROGRAMMING_LANGUAGES', '')
     langs = [
         lang.strip()
