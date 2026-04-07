@@ -102,7 +102,7 @@ def fetch_vacancies_sj(
     total_found = 0
     town_name = None
     page = 0
-    
+
     while True:
         params = {
             'page': page,
