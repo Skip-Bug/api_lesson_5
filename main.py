@@ -1,26 +1,12 @@
+from terminaltables import AsciiTable 
 from dotenv import load_dotenv
 import requests
 import time
 import os
-from terminaltables import AsciiTable
-
-AREA_HH = 1
-TOWN_SJ = 4
-PERIOD = None
-
-PROGRAMMING_LANGUAGES = [
-    'Python',
-    'Java',
-    'Javascript',
-    'C#',
-    'Ruby',
-    'C++',
-    'GO',
-    'TypeScript'
-]
 
 
-def predict_salary(salary_to, salary_from):
+
+def predict_salary(salary_from, salary_to):
     """Усредняет зарплату.
 
     Если указаны обе границы (payment_from и payment_to)
@@ -52,7 +38,7 @@ def predict_rub_salary_hh(vacancy):
         return None
     salary_to = salary.get('to')
     salary_from = salary.get('from')
-    return predict_salary(salary_to, salary_from)
+    return predict_salary(salary_from, salary_to)
 
 
 def predict_rub_salary_sj(vacancy):
@@ -74,7 +60,7 @@ def predict_rub_salary_sj(vacancy):
 
     if not salary_from and not salary_to:
         return None
-    return predict_salary(salary_to, salary_from)
+    return predict_salary(salary_from, salary_to)
 
 
 def fetch_vacancies_sj(
@@ -257,7 +243,7 @@ def calculate_stats(vacancies, total_found, salary_predictor):
     total_salary = 0
     for vacancy in vacancies:
         salary = salary_predictor(vacancy)
-        if salary:
+        if salary is not None:
             processed += 1
             total_salary += salary
     average_salary = int(total_salary / processed) if processed else None
@@ -310,7 +296,20 @@ def main():
     Поиск вакансий на сайте superjob.ru и hh.ru.
 
     """
+    
     load_dotenv()
+    area_hh_id = int(os.getenv('AREA_HH','1'))
+    town_sj_id = int(os.getenv('TOWN_SJ','4'))
+    period_raw = os.getenv('PERIOD')
+    period = int(period_raw) if period_raw else None
+
+    langs_str = os.getenv('PROGRAMMING_LANGUAGES', '')
+    langs = [
+        lang.strip()
+        for lang in langs_str.split(',')
+        if lang.strip()
+    ]
+        
     sj_key = os.getenv('SJ_KEY')
     if not sj_key:
         print("Ошибка: не найден SJ_KEY в переменных окружения")
@@ -321,23 +320,23 @@ def main():
     sj_town = None
     hh_town = None
 
-    for lang in PROGRAMMING_LANGUAGES:
+    for lang in langs:
 
         vacancies_sj, total_sj, town_sj = fetch_vacancies_sj(
-            lang, TOWN_SJ, PERIOD, sj_key)
+            lang, town_sj_id, period, sj_key)
         stats_sj[lang] = calculate_stats(
             vacancies_sj, total_sj, predict_rub_salary_sj)
         if sj_town is None and town_sj is not None:
             sj_town = town_sj
         vacancies_hh, total_hh, town_hh = fetch_vacancies_hh(
-            lang, AREA_HH, PERIOD)
+            lang, area_hh_id, period)
         stats_hh[lang] = calculate_stats(
             vacancies_hh, total_hh, predict_rub_salary_hh)
         if hh_town is None and town_hh is not None:
             hh_town = town_hh
 
-    print_table('SuperJob', stats_sj, sj_town, PERIOD)
-    print_table('HeadHunter', stats_hh, hh_town, PERIOD)
+    print_table('SuperJob', stats_sj, sj_town, period)
+    print_table('HeadHunter', stats_hh, hh_town, period)
 
 
 if __name__ == "__main__":
