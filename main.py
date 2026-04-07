@@ -69,20 +69,17 @@ def fetch_vacancies_sj(
     period,
     api_key,
     per_page=100,
-    max_pages=5
 ):
     """
     Загружает все доступные вакансии SuperJob по ключевому слову и городу.
 
-    Учитывает ограничение API: максимум 500 записей. При count=100 максимальное
-    количество страниц = 5. Пагинация управляется параметром max_pages.
+    
     no_agreement параметр отвечающий за показ вакансий с пустыми полями
     зарплаты.
 
     Args:
         keyword (str): ключевое слово для поиска (например, 'Python').
-        town (int | None): ID города (например, 4 для Москвы).
-        Если None – поиск по всем городам.
+        town (int): ID города (например, 4 для Москвы).
         period (int | None): Период публикации вакансии.
         Возможные значения:
                 0 — за всё время.
@@ -92,10 +89,8 @@ def fetch_vacancies_sj(
         Если None, фильтрация по периоду не применяется.
         api_key (str): секретный ключ API SuperJob.
         per_page (int): количество вакансий на страницу (1..100).
-        По умолчанию 100.
-        max_pages (int): максимальное число запрашиваемых страниц.
-        По умолчанию 5.
-
+        По умолчанию 100.   
+    
     Returns:
         tuple[list, int, str | None]:
         (список вакансий, общее количество найденных, название города).
@@ -104,64 +99,63 @@ def fetch_vacancies_sj(
     headers = {'X-Api-App-Id': api_key, 'User-Agent': 'Mozilla/5.0'}
     no_agreement = 1
     all_vacancies = []
-    town_name = None
     total_found = 0
-    for page in range(max_pages):
+    town_name = None
+    page = 0
+    while True:
         params = {
             'page': page,
             'count': per_page,
+            'town': town,
             'keyword': keyword,
             'no_agreement': no_agreement
         }
-
-        if town is not None:
-            params['town'] = town
         if period is not None:
             params['period'] = period
         try:
             response = requests.get(
-                url, params=params, headers=headers, timeout=10)
+                url,
+                params=params,
+                headers=headers,
+                timeout=10
+            )
             response.raise_for_status()
             response_api = response.json()
-            vacancies = response_api.get('objects', [])
-
-            if not vacancies:
-                break
-            if town_name is None and vacancies:
-                town_name = vacancies[0].get('town', {}).get('title')
-            all_vacancies.extend(vacancies)
-            total_found = response_api.get('total', len(all_vacancies))
-            time.sleep(1)
-
-            if not response_api.get('more'):
-                break
-
         except requests.exceptions.RequestException as e:
             print(f"Ошибка SuperJob для {keyword} (стр. {page+1}): {e}")
             break
-
+        
+        vacancies = response_api.get('objects', [])
+        if not vacancies:
+            break
+        
+        if town_name is None and vacancies:
+            town_name = vacancies[0].get('town', {}).get('title')
+        
+        all_vacancies.extend(vacancies)
+        total_found = response_api.get('total', len(all_vacancies))
+        time.sleep(1)
+        if not response_api.get('more'):
+            break
+        page += 1
     return all_vacancies, total_found, town_name
 
 
 def fetch_vacancies_hh(
     text,
-    area=None,
+    area,
     period=None,
     per_page=100,
-    max_pages=20
 ):
     """Загружает доступные вакансии Head Hunter по ключевому слову и городу.
 
-    Учитывает ограничение API: максимум 2000 записей.
-    При count=100 максимальное количество страниц = 20.
-    Пагинация управляется параметром max_pages.
+
     only_with_salary параметр отвечающий за показ вакансий с пустыми полями
     зарплаты.
 
     Args:
         text (str): ключевое слово для поиска (например, 'Python').
-        town (int | None): ID города (например, 4 для Москвы).
-        Если None – поиск по всем городам.
+        area (int): ID города (например, 1 для Москвы).
         period (int | None): Период публикации вакансии.
         Возможные значения:
                 0 — за всё время.
@@ -171,8 +165,6 @@ def fetch_vacancies_hh(
         Если None, фильтрация по периоду не применяется.
         per_page (int): количество вакансий на страницу (1..100).
         По умолчанию 100.
-        max_pages (int): максимальное число запрашиваемых страниц.
-        По умолчанию 20.
 
     Returns:
             tuple[list, int, str | None]:
@@ -184,40 +176,42 @@ def fetch_vacancies_hh(
     all_vacancies = []
     total_found = 0
     town_name = None
-
-    for page in range(max_pages):
+    page = 0
+    while True:
         params = {
             'page': page,
             'text': text,
+            'area': area,
             'per_page': per_page,
             'only_with_salary': only_with_salary,
         }
 
-        if area is not None:
-            params['area'] = area
         if period is not None:
             params['period'] = period
+
         try:
             response = requests.get(
                 url, params=params, headers=headers, timeout=10)
             response.raise_for_status()
             response_api = response.json()
-            vacancies = response_api.get('items', [])
-
-            if not vacancies:
-                break
-            if town_name is None and vacancies:
-                town_name = vacancies[0].get('area', {}).get('name')
-            all_vacancies.extend(vacancies)
-            total_found = response_api.get('found', len(all_vacancies))
-            time.sleep(1)
-
-            if page >= response_api.get('pages', 1) - 1:
-                break
-
         except requests.exceptions.RequestException as e:
             print(f"Ошибка HeadHunter для {text} (стр. {page+1}): {e}")
             break
+        
+        vacancies = response_api.get('items', [])
+        if not vacancies:
+            break
+        
+        if town_name is None and vacancies:
+            town_name = vacancies[0].get('area', {}).get('name')        
+        
+        all_vacancies.extend(vacancies)
+        total_found = response_api.get('found', len(all_vacancies))
+        time.sleep(1)
+        if page >= response_api.get('pages', 1) - 1:
+            break
+        page += 1   
+            
     return all_vacancies, total_found, town_name
 
 
@@ -301,8 +295,11 @@ def main():
     area_hh_id = int(os.getenv('AREA_HH','1'))
     town_sj_id = int(os.getenv('TOWN_SJ','4'))
     period_raw = os.getenv('PERIOD')
-    period = int(period_raw) if period_raw else None
-
+    try:
+        period = int(period_raw) if period_raw else None
+    except ValueError:
+        print(f"Ошибка: PERIOD='{period_raw}' — не число")
+    period = None
     langs_str = os.getenv('PROGRAMMING_LANGUAGES', '')
     langs = [
         lang.strip()
@@ -323,15 +320,29 @@ def main():
     for lang in langs:
 
         vacancies_sj, total_sj, town_sj = fetch_vacancies_sj(
-            lang, town_sj_id, period, sj_key)
+            lang,
+            town_sj_id,
+            period,
+            sj_key
+        )
         stats_sj[lang] = calculate_stats(
-            vacancies_sj, total_sj, predict_rub_salary_sj)
+            vacancies_sj,
+            total_sj,
+            predict_rub_salary_sj
+        )
         if sj_town is None and town_sj is not None:
             sj_town = town_sj
+        
         vacancies_hh, total_hh, town_hh = fetch_vacancies_hh(
-            lang, area_hh_id, period)
+            lang,
+            area_hh_id,
+            period
+        )
         stats_hh[lang] = calculate_stats(
-            vacancies_hh, total_hh, predict_rub_salary_hh)
+            vacancies_hh,
+            total_hh,
+            predict_rub_salary_hh
+        )
         if hh_town is None and town_hh is not None:
             hh_town = town_hh
 
