@@ -56,6 +56,7 @@ API-ключ необходим для работы с API SuperJob.
 ```bash
    cd путь/к/папке/с/кодом
 ```
+<img width="400" height="300" alt="Screenshot 2026-04-07 221237" src="https://github.com/user-attachments/assets/8ab5b8c8-f2cf-4b69-9710-35a424017206" />
 
 ## ПС
 Для сбора статистики придётся подождать минуты 2-5.
